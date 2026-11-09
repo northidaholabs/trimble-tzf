@@ -19,6 +19,10 @@ contains no vendor source, firmware, or binaries, and is **not affiliated with
 or endorsed by Trimble Inc.**; "Trimble", "X7", "X9" are trademarks of their
 respective owners.
 
+I built this clean-room from the structure of .tzf files themselves. It uses
+no Trimble source code, internal documents, or confidential information,
+including anything from my past employment at Trimble.
+
 Contents: [What is supported](#what-is-supported) · [Build and install](#build-and-install) ·
 [tzfdump](#tzfdump) · [tzf2ply](#tzf2ply) · [Library](#library) ·
 [Coordinates](#coordinates) · [Accuracy](#accuracy) ·
