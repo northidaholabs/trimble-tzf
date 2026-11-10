@@ -365,6 +365,7 @@ cargo test
 | Test | What it checks |
 |---|---|
 | Unit tests in `src/lib.rs` (synthetic files) | Non-`.tzf` input is rejected; block walk, tile placement and DEFLATE decode; JPEG blocks are not decodable; metadata angles and HA wrap-around; Snappy literals and overlapping copies; the levelling guard accepts only proper rotations and `ScanMeta::levelling` reports each case; range/angle planes turn into the expected XYZ; point azimuth is 2π − HA; the walker resyncs past a corrupt descriptor; planes not 4 bytes per cell, planes of differing sizes, duplicate or missing components and blocks larger than a tile are errors; a huge declared point count or raw size does not drive allocation; every truncation and single-byte corruption of a synthetic file returns without panicking |
+| `tests/bins.rs` (synthetic files, builder in `tests/common`) | Runs `tzfdump` and `tzf2ply`. `tzfdump`: header, sections and scan metadata, `--blocks`/`--verify` listings, a failed `--verify` (bad DEFLATE, Snappy, JPEG and unknown blocks) exits 1. `tzf2ply`: the PLY and LAS headers and points, both levelling warnings, an empty cloud, intensity from a PGM. Both: usage errors exit 2; a missing file, a non-`.tzf` file and unreadable metadata exit 1 with a message. |
 | `tests/fixture.rs` | With `TZF_FIXTURE=<path to a .tzf>`: decodes the file, checks levelling was applied, the point count equals the declared count and every range is between 0.1 m and 400 m. Ignored by default, so CI reports it as ignored rather than passed. |
 
 Scan files are not committed (size, and they show private places), so the
@@ -374,8 +375,14 @@ fixture test is opt-in:
 TZF_FIXTURE=/path/to/scan.tzf cargo test --release -- --ignored
 ```
 
-CI runs `cargo test --locked` and builds release archives (`tzfdump` and
-`tzf2ply`) for x86_64 and aarch64 Linux.
+CI runs `cargo test --locked`, measures line coverage (and fails below 90%)
+with [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov), and builds
+release archives (`tzfdump` and `tzf2ply`) for x86_64 and aarch64 Linux. To
+measure coverage locally:
+
+```bash
+cargo llvm-cov --locked --summary-only --fail-under-lines 90
+```
 
 ## License
 
