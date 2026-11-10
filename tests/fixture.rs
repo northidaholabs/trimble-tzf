@@ -1,9 +1,13 @@
-//! Decodes a real scan when `TZF_FIXTURE` points at one (scan files are not
-//! committed). Checks the point count against the file metadata and that the
-//! points form a plausible scene.
+//! Decodes a real scan named by `TZF_FIXTURE` (scan files are not committed).
+//! Checks the point count against the file metadata and that the points form
+//! a plausible scene. Ignored by default, so a run without a scan reports it
+//! as ignored instead of passing it:
+//!
+//!     TZF_FIXTURE=/path/to/scan.tzf cargo test --release -- --ignored
 #[test]
-fn decodes_fixture_when_present() {
-    let Ok(path) = std::env::var("TZF_FIXTURE") else { return };
+#[ignore = "needs a real scan: set TZF_FIXTURE and run with --ignored"]
+fn decodes_fixture() {
+    let path = std::env::var("TZF_FIXTURE").expect("set TZF_FIXTURE to the path of a .tzf file");
     let tzf = trimble_tzf::Tzf::open(std::path::Path::new(&path)).unwrap();
     let meta = tzf.scan_meta().unwrap();
     assert!(meta.levelling.is_applied(), "levelling: {:?}", meta.levelling);
