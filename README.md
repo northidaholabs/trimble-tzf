@@ -365,13 +365,13 @@ cargo test
 | Test | What it checks |
 |---|---|
 | Unit tests in `src/lib.rs` (synthetic files) | Non-`.tzf` input is rejected; block walk, tile placement and DEFLATE decode; JPEG blocks are not decodable; metadata angles and HA wrap-around; Snappy literals and overlapping copies; the levelling guard accepts only proper rotations and `ScanMeta::levelling` reports each case; range/angle planes turn into the expected XYZ; point azimuth is 2π − HA; the walker resyncs past a corrupt descriptor; planes not 4 bytes per cell, planes of differing sizes, duplicate or missing components and blocks larger than a tile are errors; a huge declared point count or raw size does not drive allocation; every truncation and single-byte corruption of a synthetic file returns without panicking |
-| `tests/fixture.rs` | With `TZF_FIXTURE=<path to a .tzf>`: decodes the file, checks levelling was applied, the point count equals the declared count and every range is between 0.1 m and 400 m. Without the variable it passes without doing anything. |
+| `tests/fixture.rs` | With `TZF_FIXTURE=<path to a .tzf>`: decodes the file, checks levelling was applied, the point count equals the declared count and every range is between 0.1 m and 400 m. Ignored by default, so CI reports it as ignored rather than passed. |
 
 Scan files are not committed (size, and they show private places), so the
 fixture test is opt-in:
 
 ```bash
-TZF_FIXTURE=/path/to/scan.tzf cargo test --release
+TZF_FIXTURE=/path/to/scan.tzf cargo test --release -- --ignored
 ```
 
 CI runs `cargo test --locked` and builds release archives (`tzfdump` and
