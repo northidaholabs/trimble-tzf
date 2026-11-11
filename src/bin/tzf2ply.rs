@@ -1,3 +1,6 @@
+// Copyright (C) 2026 North Idaho Labs, LLC
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 //! tzf2ply — convert a Trimble TZF scan to PLY (binary) and LAS 1.2.
 //!
 //! Usage: `tzf2ply <in.tzf> <out-base> [--intensity-pgm <grid.pgm>]`
