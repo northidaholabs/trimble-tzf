@@ -2,7 +2,7 @@
 name = "trimble-tzf"
 version = "0.2.0"
 edition = "2021"
-license = "AGPL-3.0-or-later"
+license = "Apache-2.0"
 description = "Reader for Trimble .tzf laser-scan point-cloud files, documented from observed file structure."
 repository = "https://github.com/northidaholabs/trimble-tzf"
 readme = "README.md"

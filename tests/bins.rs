@@ -1,5 +1,5 @@
-// Copyright (C) 2026 North Idaho Labs, LLC
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright 2026 Jim Coleman / North Idaho Labs, LLC
+// SPDX-License-Identifier: Apache-2.0
 
 //! Runs the `tzfdump` and `tzf2ply` binaries on small synthetic `.tzf` files
 //! (built in `tests/common`) and checks their output, exit codes and errors.
