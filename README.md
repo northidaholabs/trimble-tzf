@@ -386,4 +386,9 @@ cargo llvm-cov --locked --summary-only --fail-under-lines 90
 
 ## License
 
-MIT (see `LICENSE`).
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
+GNU Affero General Public License v3.0 or later (SPDX `AGPL-3.0-or-later`; see `LICENSE`).
+
+Versions released before this change remain under the MIT license. Commercial
+licenses are available from [North Idaho Labs](https://northidaholabs.com).

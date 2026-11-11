@@ -1,3 +1,6 @@
+// Copyright (C) 2026 North Idaho Labs, LLC
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 //! Decodes a real scan named by `TZF_FIXTURE` (scan files are not committed).
 //! Checks the point count against the file metadata and that the points form
 //! a plausible scene. Ignored by default, so a run without a scan reports it

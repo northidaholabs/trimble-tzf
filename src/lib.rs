@@ -1,3 +1,6 @@
+// Copyright (C) 2026 North Idaho Labs, LLC
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 //! `trimble_tzf` — a reader for **Trimble `.tzf`** laser‑scan point‑cloud files.
 //!
 //! The format here is documented purely from the **observable byte structure**

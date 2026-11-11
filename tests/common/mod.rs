@@ -1,3 +1,6 @@
+// Copyright (C) 2026 North Idaho Labs, LLC
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 //! Synthetic `.tzf` builder for the integration tests.
 //!
 //! Copied from the unit tests in `src/lib.rs` (`push_block`, `plane_file`,

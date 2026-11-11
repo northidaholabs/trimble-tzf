@@ -1,3 +1,6 @@
+// Copyright (C) 2026 North Idaho Labs, LLC
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 //! tzfdump — inspect a Trimble X-series `.tzf` file.
 //!
 //!   tzfdump <file.tzf>             header, sections, scan metadata
