@@ -1,5 +1,5 @@
-// Copyright (C) 2026 North Idaho Labs, LLC
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright 2026 Jim Coleman / North Idaho Labs, LLC
+// SPDX-License-Identifier: Apache-2.0
 
 //! Decodes a real scan named by `TZF_FIXTURE` (scan files are not committed).
 //! Checks the point count against the file metadata and that the points form

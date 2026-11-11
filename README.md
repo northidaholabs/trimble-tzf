@@ -86,8 +86,8 @@ was still named `tzf` then). Changes are listed in
 
 Tagged releases attach prebuilt binaries for `x86_64-unknown-linux-gnu` and
 `aarch64-unknown-linux-gnu` (64-bit Raspberry Pi OS) as
-`trimble-tzf-<target>.tar.gz`, each holding `tzfdump`, `tzf2ply`, `LICENSE`
-and `README.md`.
+`trimble-tzf-<target>.tar.gz`, each holding `tzfdump`, `tzf2ply`, `LICENSE`,
+`NOTICE`, and `README.md`.
 
 ## tzfdump
 
@@ -386,9 +386,6 @@ cargo llvm-cov --locked --summary-only --fail-under-lines 90
 
 ## License
 
-[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+Licensed under Apache-2.0. See `LICENSE`.
 
-GNU Affero General Public License v3.0 or later (SPDX `AGPL-3.0-or-later`; see `LICENSE`).
-
-Versions released before this change remain under the MIT license. Commercial
-licenses are available from [North Idaho Labs](https://northidaholabs.com).
+Earlier releases up to v0.2.0 remain under MIT.

@@ -1,5 +1,5 @@
-// Copyright (C) 2026 North Idaho Labs, LLC
-// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright 2026 Jim Coleman / North Idaho Labs, LLC
+// SPDX-License-Identifier: Apache-2.0
 
 //! `trimble_tzf` — a reader for **Trimble `.tzf`** laser‑scan point‑cloud files.
 //!

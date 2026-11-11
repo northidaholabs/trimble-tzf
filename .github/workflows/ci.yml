@@ -46,8 +46,8 @@ jobs:
         run: cargo build --release --locked --target ${{ matrix.target }}
       - run: |
           mkdir dist
-          cp target/${{ matrix.target }}/release/tzfdump target/${{ matrix.target }}/release/tzf2ply LICENSE README.md dist/
-          tar -C dist -czf trimble-tzf-${{ matrix.target }}.tar.gz tzfdump tzf2ply LICENSE README.md
+          cp target/${{ matrix.target }}/release/tzfdump target/${{ matrix.target }}/release/tzf2ply LICENSE NOTICE README.md dist/
+          tar -C dist -czf trimble-tzf-${{ matrix.target }}.tar.gz tzfdump tzf2ply LICENSE NOTICE README.md
       - uses: actions/upload-artifact@v4
         with:
           name: trimble-tzf-${{ matrix.target }}
