@@ -241,6 +241,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 | `decode(&self, &Block) -> Result<Vec<u8>>` | Same, into a new buffer. |
 | `points(&self) -> Result<Vec<Point>>` | All valid points, levelled, in metres. `intensity` is always `0.0` for now. |
 | `grid_points(&self) -> Result<Vec<GridPoint>>` | Like `points`, with each point's grid `row` and `col`. Sorted by column, then row. |
+| `with_threads(self, n: usize) -> Tzf` | Use at most `n` threads to inflate tiles in `points` and `grid_points` (0, the default: one per core). The output is the same whatever the count. |
 
 `points` and `grid_points` need exactly one block each of components 1, 2 and
 3 for every tile that has any of them, all with the same width and height, 4

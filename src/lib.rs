@@ -242,6 +242,7 @@ enum Storage {
 pub struct Tzf {
     storage: Storage,
     header: Header,
+    threads: usize,
 }
 
 impl Tzf {
@@ -255,7 +256,23 @@ impl Tzf {
         Ok(Tzf {
             storage: Storage::Mapped(map),
             header,
+            threads: 0,
         })
+    }
+
+    /// Use at most `n` threads to inflate tiles in [`Tzf::grid_points`] and
+    /// [`Tzf::points`] (0, the default: one per core). The output is the same
+    /// whatever the count. A caller decoding several scans at once may want 1.
+    pub fn with_threads(mut self, n: usize) -> Tzf {
+        self.threads = n;
+        self
+    }
+
+    fn threads(&self) -> usize {
+        match self.threads {
+            0 => std::thread::available_parallelism().map_or(1, |n| n.get()),
+            n => n,
+        }
     }
 
     /// Open from an in-memory buffer (tests, embedded data).
@@ -264,6 +281,7 @@ impl Tzf {
         Ok(Tzf {
             storage: Storage::Owned(data),
             header,
+            threads: 0,
         })
     }
 
@@ -416,6 +434,8 @@ impl Tzf {
         use std::collections::BTreeMap;
         let meta = self.scan_meta()?;
         let (rows, cols, tile) = (meta.grid_rows as usize, meta.grid_cols as usize, meta.tile_size as usize);
+        // Keyed (tile_col, tile_row): taking one tile column at a time, line by
+        // line, gives the points already in (col, row) order.
         let mut tiles: BTreeMap<(u32, u32), [Option<Block>; 3]> = BTreeMap::new();
         for b in self.blocks() {
             let slot = match b.component {
@@ -424,7 +444,7 @@ impl Tzf {
                 COMPONENT_HORIZONTAL_ANGLE => 2,
                 _ => continue,
             };
-            let entry = &mut tiles.entry((b.tile_row, b.tile_col)).or_default()[slot];
+            let entry = &mut tiles.entry((b.tile_col, b.tile_row)).or_default()[slot];
             if let Some(prev) = entry {
                 return Err(Error::Malformed(format!(
                     "tile ({},{}) has two component {} blocks (0x{:x} and 0x{:x})",
@@ -438,7 +458,7 @@ impl Tzf {
         }
         let mut cells = 0u64;
         let mut checked = Vec::with_capacity(tiles.len());
-        for (&(tr, tc), p) in &tiles {
+        for (&(tc, tr), p) in &tiles {
             let [Some(r), Some(v), Some(h)] = *p else {
                 return Err(Error::Malformed(format!("tile ({tr},{tc}) is missing a component")));
             };
@@ -464,58 +484,86 @@ impl Tzf {
                 }
             }
             cells += r.width as u64 * r.height as u64;
-            checked.push(((tr, tc), [r, v, h]));
+            checked.push(((tc, tr), [r, v, h]));
         }
         let cap = cells
             .min(meta.n_points as u64)
             .min(meta.grid_rows as u64 * meta.grid_cols as u64);
         let t = meta.tilt;
         let mut out = Vec::with_capacity(cap as usize);
-        let (mut rb, mut vb, mut hb) = (Vec::new(), Vec::new(), Vec::new());
-        for ((tr, tc), [r, v, h]) in checked {
-            self.decode_into(&r, &mut rb)?;
-            self.decode_into(&v, &mut vb)?;
-            self.decode_into(&h, &mut hb)?;
-            // decode_into yields exactly raw_size = width × height × 4 bytes.
-            let (lines, per_line) = (r.width as usize, r.height as usize);
-            let cell = |buf: &[u8], i: usize| rd_u32(buf, i * 4);
-            for line in 0..lines {
+        let threads = self.threads();
+        let cell = |buf: &[u8], i: usize| rd_u32(buf, i * 4);
+        let mut i0 = 0;
+        while i0 < checked.len() {
+            let tc = checked[i0].0 .0;
+            let i1 = i0 + checked[i0..].iter().take_while(|c| c.0 .0 == tc).count();
+            // Inflate the column's tiles (in parallel when allowed), then walk
+            // them line by line, top tile first.
+            let column = &checked[i0..i1];
+            let decoded = self.decode_tiles(column, threads)?;
+            let width = column.iter().map(|c| c.1[0].width as usize).max().unwrap_or(0);
+            for line in 0..width {
                 let col = tc as usize * tile + line;
                 if col >= cols {
                     break;
                 }
-                let (mut va_u, mut ha_u) = (0i64, 0i64);
-                for k in 0..per_line {
-                    let i = line * per_line + k;
-                    // Integrate before the validity checks so the running angle
-                    // stays correct across empty cells.
-                    va_u += cell(&vb, i) as i32 as i64;
-                    ha_u += cell(&hb, i) as i32 as i64;
-                    let row = tr as usize * tile + k;
-                    let raw = cell(&rb, i);
-                    if row >= rows || raw == 0 || raw == u32::MAX {
+                for (((_, tr), [r, _, _]), [rb, vb, hb]) in column.iter().zip(&decoded) {
+                    // decode_into yields exactly raw_size = width × height × 4 bytes.
+                    let (lines, per_line) = (r.width as usize, r.height as usize);
+                    if line >= lines {
                         continue;
                     }
-                    let range = raw as f64 / r.scale as f64 / 1000.0;
-                    let (va, ha) = (va_u as f64 * 1e-6, ha_u as f64 * 1e-6);
-                    let hz = range * va.sin();
-                    let (x, y, z) = (hz * ha.cos(), hz * ha.sin(), range * va.cos());
-                    // p' = tiltᵀ · p
-                    out.push(GridPoint {
-                        point: Point {
-                            x: (t[0][0] * x + t[1][0] * y + t[2][0] * z) as f32,
-                            y: (t[0][1] * x + t[1][1] * y + t[2][1] * z) as f32,
-                            z: (t[0][2] * x + t[1][2] * y + t[2][2] * z) as f32,
-                            intensity: 0.0,
-                        },
-                        row: row as u32,
-                        col: col as u32,
-                    });
+                    let (mut va_u, mut ha_u) = (0i64, 0i64);
+                    for k in 0..per_line {
+                        let i = line * per_line + k;
+                        // Integrate before the validity checks so the running angle
+                        // stays correct across empty cells.
+                        va_u += cell(vb, i) as i32 as i64;
+                        ha_u += cell(hb, i) as i32 as i64;
+                        let row = *tr as usize * tile + k;
+                        let raw = cell(rb, i);
+                        if row >= rows || raw == 0 || raw == u32::MAX {
+                            continue;
+                        }
+                        let range = raw as f64 / r.scale as f64 / 1000.0;
+                        let (va, ha) = (va_u as f64 * 1e-6, ha_u as f64 * 1e-6);
+                        let hz = range * va.sin();
+                        let (x, y, z) = (hz * ha.cos(), hz * ha.sin(), range * va.cos());
+                        // p' = tiltᵀ · p
+                        out.push(GridPoint {
+                            point: Point {
+                                x: (t[0][0] * x + t[1][0] * y + t[2][0] * z) as f32,
+                                y: (t[0][1] * x + t[1][1] * y + t[2][1] * z) as f32,
+                                z: (t[0][2] * x + t[1][2] * y + t[2][2] * z) as f32,
+                                intensity: 0.0,
+                            },
+                            row: row as u32,
+                            col: col as u32,
+                        });
+                    }
                 }
             }
+            i0 = i1;
         }
-        out.sort_by_key(|g| (g.col, g.row));
+        debug_assert!(out.windows(2).all(|w| (w[0].col, w[0].row) < (w[1].col, w[1].row)));
         Ok(out)
+    }
+
+    /// Inflate the three planes of each tile, on up to `threads` threads.
+    /// The results come back in the tiles' order whatever the thread count.
+    fn decode_tiles(&self, tiles: &[((u32, u32), [Block; 3])], threads: usize) -> Result<Vec<[Vec<u8>; 3]>> {
+        let one = |(_, [r, v, h]): &((u32, u32), [Block; 3])| -> Result<[Vec<u8>; 3]> {
+            Ok([self.decode(r)?, self.decode(v)?, self.decode(h)?])
+        };
+        let threads = threads.clamp(1, tiles.len().max(1));
+        if threads == 1 {
+            return tiles.iter().map(one).collect();
+        }
+        let chunk = tiles.len().div_ceil(threads);
+        std::thread::scope(|s| {
+            let hs: Vec<_> = tiles.chunks(chunk).map(|c| s.spawn(move || c.iter().map(one).collect::<Vec<_>>())).collect();
+            hs.into_iter().flat_map(|h| h.join().expect("tile decode thread")).collect()
+        })
     }
 }
 
