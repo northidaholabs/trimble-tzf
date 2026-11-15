@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+- `grid_points` and `points` are about two to three times faster on full
+  domes, with the same output byte for byte. Points are produced already in
+  (column, row) order instead of being sorted afterwards, the tiles of each
+  tile column are inflated in parallel, and DEFLATE goes through `zlib-rs`
+  (pure Rust, still no C) instead of `miniz_oxide`.
+
+### Added
+- `Tzf::with_threads(n)` caps the threads used to inflate tiles (default:
+  one per core). The output doesn't depend on it.
+
 ## 0.2.0 — 2026-10-20
 
 First release that decodes points. Use this rather than `v0.1.0`.

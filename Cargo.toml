@@ -22,6 +22,6 @@ name = "tzf2ply"
 path = "src/bin/tzf2ply.rs"
 
 [dependencies]
-flate2 = "1"
+flate2 = { version = "1", default-features = false, features = ["zlib-rs"] }
 memmap2 = "0.9"
 thiserror = "2"
